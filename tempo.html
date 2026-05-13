@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Métronome Tempo Pro v4</title>
+    <title>Métronome Tempo v5</title>
     <style>
         :root {
             --primary: #2c3e50;
@@ -22,20 +22,20 @@
             color: var(--primary);
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Alignement en haut pour mieux gérer la hauteur */
+            align-items: flex-start;
             min-height: 100vh;
             margin: 0;
-            padding: 10px; /* Réduit de 20px à 10px pour gagner de la place */
+            padding: 10px;
             box-sizing: border-box;
         }
 
         .container {
             background: white;
-            padding: 15px; /* Réduit pour mobile */
+            padding: 15px;
             border-radius: 15px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             width: 100%;
-            max-width: 360px; /* Force la largeur max pour simuler le téléphone */
+            max-width: 360px;
             box-sizing: border-box;
             margin-bottom: 20px;
         }
@@ -44,23 +44,56 @@
             text-align: center;
             margin: 0 0 15px 0;
             color: var(--dark);
-            font-size: 1.5rem; /* Réduit pour éviter le débordement */
+            font-size: 1.5rem;
         }
 
-        /* Section Volume */
+        /* Section Volume avec Boutons */
         .volume-control {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
             margin-bottom: 15px;
-            font-size: 0.9rem;
-            color: var(--dark);
+            background: var(--light);
+            padding: 8px;
+            border-radius: 10px;
         }
-        
-        input[type=range] {
-            width: 100px;
+
+        .volume-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--dark);
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .btn-volume {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1.2rem;
+            font-weight: bold;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            user-select: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+
+        .btn-vol-minus { background-color: #95a5a6; }
+        .btn-vol-plus { background-color: var(--accent); }
+        .btn-volume:active { transform: scale(0.95); }
+
+        .volume-display {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--dark);
+            min-width: 40px;
+            text-align: center;
         }
 
         /* Section Tempo Principal */
@@ -68,25 +101,24 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 5px; /* Réduit l'espace entre les boutons */
+            gap: 5px;
             margin-bottom: 15px;
             background: var(--light);
             padding: 10px;
             border-radius: 10px;
-            flex-wrap: nowrap; /* Empêche le retour à la ligne */
+            flex-wrap: nowrap;
         }
 
-        /* Correction du centrage du texte Tempo */
         .tempo-display-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 110px; /* Largeur fixe pour stabilité */
+            width: 110px;
         }
 
         .tempo-display {
-            font-size: 2.5rem; /* Réduit de 3rem à 2.5rem */
+            font-size: 2.5rem;
             font-weight: bold;
             color: var(--primary);
             line-height: 1;
@@ -101,7 +133,7 @@
         }
 
         .btn-circle {
-            width: 40px; /* Réduit de 50px */
+            width: 40px;
             height: 40px;
             border-radius: 50%;
             border: none;
@@ -157,7 +189,7 @@
 
         .rhythm-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 colonnes fixes pour mobile */
+            grid-template-columns: repeat(3, 1fr);
             gap: 5px;
             margin-bottom: 15px;
         }
@@ -177,15 +209,15 @@
         .rhythm-btn:hover { border-color: var(--dark); background: #f9f9f9; }
         .rhythm-btn.active { background-color: var(--dark); color: white; border-color: var(--dark); }
 
-        /* Tableau optimisé */
+        /* Tableau */
         .table-responsive {
-            overflow-x: hidden; /* Pas de scroll horizontal si possible */
+            overflow-x: hidden;
         }
 
         .values-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.8rem; /* Police plus petite */
+            font-size: 0.8rem;
             margin-top: 5px;
         }
 
@@ -237,13 +269,14 @@
 <body>
 
 <div class="container">
-    <h1>Métronome Pro</h1>
+    <h1>Métronome Tempo v1</h1>
 
-    <!-- Contrôle Volume -->
+    <!-- Contrôle Volume avec Boutons -->
     <div class="volume-control">
-        <span>Volume</span>
-        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5">
-        <span id="volumeValue">50%</span>
+        <span class="volume-label">Volume</span>
+        <button class="btn-volume btn-vol-minus" onclick="changeVolume(-0.1)">-</button>
+        <span class="volume-display" id="volumeValue">50%</span>
+        <button class="btn-volume btn-vol-plus" onclick="changeVolume(0.1)">+</button>
     </div>
 
     <!-- Contrôle Tempo -->
@@ -251,7 +284,6 @@
         <button class="btn-circle btn-minus-10" onclick="changeTempo(-10)">-10</button>
         <button class="btn-circle btn-minus" onclick="changeTempo(-1)">-</button>
         
-        <!-- Conteneur corrigé pour le centrage -->
         <div class="tempo-display-container">
             <div class="tempo-display"><span id="bpmValue">100</span></div>
             <span class="tempo-unit-label" id="currentUnitLabel">BPM (Noire)</span>
@@ -387,14 +419,26 @@
         'double-croche': 'Dbl. croche'
     };
 
-    // Gestion du volume
-    const volumeSlider = document.getElementById('volumeSlider');
-    const volumeValue = document.getElementById('volumeValue');
+    // Gestion du volume avec boutons
+    function changeVolume(delta) {
+        let newVol = masterVolume + delta;
+        // Limites entre 0 et 1
+        if (newVol < 0) newVol = 0;
+        if (newVol > 1) newVol = 1;
+        
+        // Arrondi pour éviter les erreurs de flottants (ex: 0.300000004)
+        masterVolume = Math.round(newVol * 10) / 10;
+        
+        updateVolumeDisplay();
+    }
 
-    volumeSlider.addEventListener('input', function() {
-        masterVolume = parseFloat(this.value);
+    function updateVolumeDisplay() {
+        const volumeValue = document.getElementById('volumeValue');
         volumeValue.innerText = Math.round(masterVolume * 100) + '%';
-    });
+        
+        // Optionnel : désactiver visuellement les boutons aux extrémités
+        // (Géré ici par la logique qui bloque à 0 et 1)
+    }
 
     function initAudio() {
         if (!audioCtx) {
@@ -461,7 +505,6 @@
         osc.connect(gain);
         gain.connect(audioCtx.destination);
 
-        // Application du volume master
         let volumeLevel = 0;
         if (type === 'strong') {
             osc.frequency.value = 1200; 
@@ -474,7 +517,7 @@
             volumeLevel = 0.5;
         }
 
-        // Multiplication par le volume utilisateur
+        // Application du volume master
         gain.gain.setValueAtTime(volumeLevel * masterVolume, time);
         gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
         
@@ -567,7 +610,9 @@
         }
     }
 
+    // Initialisation
     updateValuesTable();
+    updateVolumeDisplay();
 </script>
 
 </body>
