@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Métronome Tempo Pro v4</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #27ae60;
+            --danger: #c0392b;
+            --light: #ecf0f1;
+            --dark: #34495e;
+            --beat-strong: #e74c3c;
+            --beat-medium: #f39c12;
+            --beat-weak: #3498db;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: var(--primary);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Alignement en haut pour mieux gérer la hauteur */
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px; /* Réduit de 20px à 10px pour gagner de la place */
+            box-sizing: border-box;
+        }
+
+        .container {
+            background: white;
+            padding: 15px; /* Réduit pour mobile */
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 360px; /* Force la largeur max pour simuler le téléphone */
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0 0 15px 0;
+            color: var(--dark);
+            font-size: 1.5rem; /* Réduit pour éviter le débordement */
+        }
+
+        /* Section Volume */
+        .volume-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: var(--dark);
+        }
+        
+        input[type=range] {
+            width: 100px;
+            cursor: pointer;
+        }
+
+        /* Section Tempo Principal */
+        .tempo-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px; /* Réduit l'espace entre les boutons */
+            margin-bottom: 15px;
+            background: var(--light);
+            padding: 10px;
+            border-radius: 10px;
+            flex-wrap: nowrap; /* Empêche le retour à la ligne */
+        }
+
+        /* Correction du centrage du texte Tempo */
+        .tempo-display-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 110px; /* Largeur fixe pour stabilité */
+        }
+
+        .tempo-display {
+            font-size: 2.5rem; /* Réduit de 3rem à 2.5rem */
+            font-weight: bold;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .tempo-unit-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-top: 2px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .btn-circle {
+            width: 40px; /* Réduit de 50px */
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            user-select: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+
+        .btn-circle:active { transform: scale(0.95); }
+        .btn-minus { background-color: var(--dark); }
+        .btn-plus { background-color: var(--accent); }
+        .btn-minus-10 { background-color: #7f8c8d; font-size: 0.9rem; width: 35px; height: 35px; }
+        .btn-plus-10 { background-color: #2ecc71; font-size: 0.9rem; width: 35px; height: 35px; }
+
+        /* Section Contrôles Lecture */
+        .playback-control {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .btn-play {
+            padding: 10px 30px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            min-width: 120px;
+        }
+
+        .btn-start { background-color: var(--accent); color: white; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); }
+        .btn-stop { background-color: var(--danger); color: white; box-shadow: 0 4px 15px rgba(192, 57, 43, 0.4); display: none; }
+
+        /* Section Rythmique */
+        .section-title {
+            font-size: 0.95rem;
+            margin: 15px 0 8px 0;
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 3px;
+            color: var(--dark);
+            font-weight: bold;
+        }
+
+        .rhythm-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 colonnes fixes pour mobile */
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .rhythm-btn {
+            padding: 8px 2px;
+            border: 2px solid var(--light);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .rhythm-btn:hover { border-color: var(--dark); background: #f9f9f9; }
+        .rhythm-btn.active { background-color: var(--dark); color: white; border-color: var(--dark); }
+
+        /* Tableau optimisé */
+        .table-responsive {
+            overflow-x: hidden; /* Pas de scroll horizontal si possible */
+        }
+
+        .values-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem; /* Police plus petite */
+            margin-top: 5px;
+        }
+
+        .values-table th, .values-table td {
+            padding: 6px 4px;
+            text-align: left;
+            border-bottom: 1px solid var(--light);
+        }
+
+        .values-table th {
+            color: var(--dark);
+            font-weight: 600;
+            background-color: #f8f9fa;
+            font-size: 0.75rem;
+        }
+
+        .col-duration { font-family: 'Courier New', monospace; font-weight: bold; color: var(--dark); width: 50px; }
+        .col-bpm { font-family: 'Courier New', monospace; font-weight: bold; color: var(--accent); width: 45px; text-align: right; }
+        .col-check { text-align: center; width: 30px; }
+
+        input[type="checkbox"] { transform: scale(1.3); cursor: pointer; accent-color: var(--accent); }
+
+        .visual-beat {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+            background-color: #ccc;
+            transition: background-color 0.1s;
+        }
+        
+        .visual-beat.strong { background-color: var(--beat-strong); box-shadow: 0 0 10px var(--beat-strong); }
+        .visual-beat.medium { background-color: var(--beat-medium); box-shadow: 0 0 10px var(--beat-medium); }
+        .visual-beat.weak { background-color: var(--beat-weak); box-shadow: 0 0 5px var(--beat-weak); }
+
+        .legend {
+            display: flex;
+            gap: 10px;
+            font-size: 0.7rem;
+            margin-top: 5px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .legend-item { display: flex; align-items: center; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Métronome Pro</h1>
+
+    <!-- Contrôle Volume -->
+    <div class="volume-control">
+        <span>Volume</span>
+        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5">
+        <span id="volumeValue">50%</span>
+    </div>
+
+    <!-- Contrôle Tempo -->
+    <div class="tempo-control">
+        <button class="btn-circle btn-minus-10" onclick="changeTempo(-10)">-10</button>
+        <button class="btn-circle btn-minus" onclick="changeTempo(-1)">-</button>
+        
+        <!-- Conteneur corrigé pour le centrage -->
+        <div class="tempo-display-container">
+            <div class="tempo-display"><span id="bpmValue">100</span></div>
+            <span class="tempo-unit-label" id="currentUnitLabel">BPM (Noire)</span>
+        </div>
+        
+        <button class="btn-circle btn-plus" onclick="changeTempo(1)">+</button>
+        <button class="btn-circle btn-plus-10" onclick="changeTempo(10)">+10</button>
+    </div>
+
+    <!-- Lecture -->
+    <div class="playback-control">
+        <button id="btnPlay" class="btn-play btn-start" onclick="togglePlay()">Play</button>
+        <button id="btnStop" class="btn-play btn-stop" onclick="togglePlay()">Stop</button>
+        <div style="margin-top:10px; height: 25px; display:flex; justify-content:center; align-items:center;">
+            <span id="visualIndicator" class="visual-beat"></span>
+        </div>
+        <div class="legend">
+            <div class="legend-item"><span class="dot" style="background:var(--beat-strong)"></span>Fort</div>
+            <div class="legend-item"><span class="dot" style="background:var(--beat-medium)"></span>Moyen</div>
+            <div class="legend-item"><span class="dot" style="background:var(--beat-weak)"></span>Faible</div>
+        </div>
+    </div>
+
+    <!-- Rythmique -->
+    <div class="section-title">Mesure</div>
+    <div class="rhythm-grid">
+        <button class="rhythm-btn" onclick="setTimeSignature(2, 4, this)">2/4</button>
+        <button class="rhythm-btn" onclick="setTimeSignature(3, 4, this)">3/4</button>
+        <button class="rhythm-btn active" onclick="setTimeSignature(4, 4, this)">4/4</button>
+        <button class="rhythm-btn" onclick="setTimeSignature(3, 8, this)">3/8</button>
+        <button class="rhythm-btn" onclick="setTimeSignature(6, 8, this)">6/8</button>
+        <button class="rhythm-btn" onclick="setTimeSignature(9, 8, this)">9/8</button>
+    </div>
+
+    <!-- Tableau des valeurs -->
+    <div class="section-title">Durées & Tempo</div>
+    <div class="table-responsive">
+        <table class="values-table">
+            <thead>
+                <tr>
+                    <th>Note</th>
+                    <th>ms</th>
+                    <th style="text-align:right">BPM</th>
+                    <th class="col-check">✓</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Ronde</td>
+                    <td class="col-duration" id="val-ronde">-</td>
+                    <td class="col-bpm" id="bpm-ronde">-</td>
+                    <td class="col-check"><input type="checkbox" name="baseTempo" value="ronde" onchange="setBaseTempo('ronde')"></td>
+                </tr>
+                <tr>
+                    <td>Blanche pt.</td>
+                    <td class="col-duration" id="val-blanche-pointee">-</td>
+                    <td class="col-bpm" id="bpm-blanche-pointee">-</td>
+                    <td class="col-check"><input type="checkbox" name="baseTempo" value="blanche-pointee" onchange="setBaseTempo('blanche-pointee')"></td>
+                </tr>
+                <tr>
+                    <td>Blanche</td>
+                    <td class="col-duration" id="val-blanche">-</td>
+                    <td class="col-bpm" id="bpm-blanche">-</td>
+                    <td class="col-check"><input type="checkbox" name="baseTempo" value="blanche" onchange="setBaseTempo('blanche')"></td>
+                </tr>
+                <tr>
+                    <td>Noire pt.</td>
+                    <td class="col-duration" id="val-noire-pointee">-</td>
+                    <td class="col-bpm" id="bpm-noire-pointee">-</td>
+                    <td class="col-check"><input type="checkbox" name="baseTempo" value="noire-pointee" onchange="setBaseTempo('noire-pointee')"></td>
+                </tr>
+                <tr>
+                    <td>Noire</td>
+                    <td class="col-duration" id="val-noire">-</td>
+                    <td class="col-bpm" id="bpm-noire">-</td>
+                    <td class="col-check"><input type="checkbox" name="baseTempo" value="noire" checked onchange="setBaseTempo('noire')"></td>
+                </tr>
+                <tr>
+                    <td>Croche pt.</td>
+                    <td class="col-duration" id="val-croche-pointee">-</td>
+                    <td class="col-bpm" id="bpm-croche-pointee">-</td>
+                    <td class="col-check"><input type="checkbox" name="baseTempo" value="croche-pointee" onchange="setBaseTempo('croche-pointee')"></td>
+                </tr>
+                <tr>
+                    <td>Croche</td>
+                    <td class="col-duration" id="val-croche">-</td>
+                    <td class="col-bpm" id="bpm-croche">-</td>
+                    <td class="col-check"><input type="checkbox" name="baseTempo" value="croche" onchange="setBaseTempo('croche')"></td>
+                </tr>
+                <tr>
+                    <td>Dbl. croche</td>
+                    <td class="col-duration" id="val-double-croche">-</td>
+                    <td class="col-bpm" id="bpm-double-croche">-</td>
+                    <td class="col-check"><input type="checkbox" name="baseTempo" value="double-croche" onchange="setBaseTempo('double-croche')"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // --- État de l'application ---
+    let bpm = 100; 
+    let baseUnit = 'noire'; 
+    let isPlaying = false;
+    let currentBeat = 0;
+    let timerID = null;
+    let nextNoteTime = 0.0;
+    let masterVolume = 0.5; // Volume par défaut à 50%
+    
+    let timeSignature = { top: 4, bottom: 4 }; 
+    let audioCtx = null;
+
+    const noteFactors = {
+        'ronde': 1,
+        'blanche-pointee': 0.75,
+        'blanche': 0.5,
+        'noire-pointee': 0.375,
+        'noire': 0.25,
+        'croche-pointee': 0.1875,
+        'croche': 0.125,
+        'double-croche': 0.0625
+    };
+
+    const unitLabels = {
+        'ronde': 'Ronde',
+        'blanche-pointee': 'Blanche pt.',
+        'blanche': 'Blanche',
+        'noire-pointee': 'Noire pt.',
+        'noire': 'Noire',
+        'croche-pointee': 'Croche pt.',
+        'croche': 'Croche',
+        'double-croche': 'Dbl. croche'
+    };
+
+    // Gestion du volume
+    const volumeSlider = document.getElementById('volumeSlider');
+    const volumeValue = document.getElementById('volumeValue');
+
+    volumeSlider.addEventListener('input', function() {
+        masterVolume = parseFloat(this.value);
+        volumeValue.innerText = Math.round(masterVolume * 100) + '%';
+    });
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function setBaseTempo(unit) {
+        document.querySelectorAll('input[name="baseTempo"]').forEach(cb => {
+            if (cb.value !== unit) cb.checked = false;
+        });
+
+        const oldFactor = noteFactors[baseUnit];
+        const newFactor = noteFactors[unit];
+        const newBpm = Math.round(bpm * (oldFactor / newFactor));
+        
+        baseUnit = unit;
+        bpm = newBpm;
+        
+        document.getElementById('bpmValue').innerText = bpm;
+        document.getElementById('currentUnitLabel').innerText = `BPM (${unitLabels[baseUnit]})`;
+        
+        updateValuesTable();
+    }
+
+    function changeTempo(delta) {
+        bpm += delta;
+        if (bpm < 20) bpm = 20;
+        if (bpm > 300) bpm = 300;
+        
+        document.getElementById('bpmValue').innerText = bpm;
+        document.getElementById('currentUnitLabel').innerText = `BPM (${unitLabels[baseUnit]})`;
+        updateValuesTable();
+    }
+
+    function setTimeSignature(top, bottom, btnElement) {
+        timeSignature = { top, bottom };
+        document.querySelectorAll('.rhythm-btn').forEach(btn => btn.classList.remove('active'));
+        if(btnElement) btnElement.classList.add('active');
+    }
+
+    function updateValuesTable() {
+        const baseDurationMs = 60000 / bpm;
+
+        for (const [key, factor] of Object.entries(noteFactors)) {
+            const durationMs = baseDurationMs * (factor / noteFactors[baseUnit]);
+            const equivalentBpm = 60000 / durationMs;
+
+            const durEl = document.getElementById(`val-${key}`);
+            const bpmEl = document.getElementById(`bpm-${key}`);
+            
+            if (durEl) durEl.innerText = Math.round(durationMs);
+            if (bpmEl) bpmEl.innerText = Math.round(equivalentBpm);
+        }
+    }
+
+    function playSound(time, type) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        // Application du volume master
+        let volumeLevel = 0;
+        if (type === 'strong') {
+            osc.frequency.value = 1200; 
+            volumeLevel = 0.8;
+        } else if (type === 'medium') {
+            osc.frequency.value = 900;
+            volumeLevel = 0.65;
+        } else { // weak
+            osc.frequency.value = 500; 
+            volumeLevel = 0.5;
+        }
+
+        // Multiplication par le volume utilisateur
+        gain.gain.setValueAtTime(volumeLevel * masterVolume, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
+        
+        osc.start(time);
+        osc.stop(time + 0.1);
+    }
+
+    function getBeatType(beatIndex, top, bottom) {
+        const posInMeasure = beatIndex % top; 
+
+        if (top === 6 && bottom === 8) {
+            if (posInMeasure === 0) return 'strong';
+            if (posInMeasure === 3) return 'medium';
+            return 'weak';
+        }
+
+        if (top === 9 && bottom === 8) {
+            if (posInMeasure === 0) return 'strong';
+            if (posInMeasure === 3 || posInMeasure === 6) return 'medium';
+            return 'weak';
+        }
+
+        if (bottom === 8 && top === 3) {
+            if (posInMeasure === 0) return 'strong';
+            return 'weak';
+        }
+
+        if (top === 4 && bottom === 4) {
+            if (posInMeasure === 0) return 'strong';
+            if (posInMeasure === 2) return 'medium';
+            return 'weak';
+        }
+
+        if (posInMeasure === 0) return 'strong';
+        return 'weak';
+    }
+
+    function scheduler() {
+        while (nextNoteTime < audioCtx.currentTime + 0.1) {
+            const beatType = getBeatType(currentBeat, timeSignature.top, timeSignature.bottom);
+            scheduleNote(beatType, nextNoteTime);
+            nextNote();
+        }
+        if (isPlaying) {
+            timerID = requestAnimationFrame(scheduler);
+        }
+    }
+
+    function scheduleNote(beatType, time) {
+        playSound(time, beatType);
+        const drawTime = (time - audioCtx.currentTime) * 1000;
+        setTimeout(() => {
+            updateVisuals(beatType);
+        }, Math.max(0, drawTime));
+    }
+
+    function nextNote() {
+        const baseDurationSec = 60.0 / bpm;
+        const denomFactor = timeSignature.bottom === 4 ? 0.25 : (timeSignature.bottom === 8 ? 0.125 : 0.25);
+        const baseFactor = noteFactors[baseUnit];
+        const secondsPerBeat = baseDurationSec * (denomFactor / baseFactor);
+
+        nextNoteTime += secondsPerBeat;
+        currentBeat++;
+    }
+
+    function updateVisuals(type) {
+        const indicator = document.getElementById('visualIndicator');
+        indicator.className = 'visual-beat ' + type;
+        setTimeout(() => {
+            indicator.className = 'visual-beat';
+        }, 150);
+    }
+
+    function togglePlay() {
+        initAudio();
+        if (isPlaying) {
+            isPlaying = false;
+            cancelAnimationFrame(timerID);
+            document.getElementById('btnPlay').style.display = 'inline-block';
+            document.getElementById('btnStop').style.display = 'none';
+            document.getElementById('visualIndicator').className = 'visual-beat';
+        } else {
+            isPlaying = true;
+            currentBeat = 0;
+            nextNoteTime = audioCtx.currentTime + 0.1;
+            scheduler();
+            document.getElementById('btnPlay').style.display = 'none';
+            document.getElementById('btnStop').style.display = 'inline-block';
+        }
+    }
+
+    updateValuesTable();
+</script>
+
+</body>
+</html>
